@@ -19,6 +19,7 @@ Authen-Service is a microservice designed to handle authentication and user mana
 - **Language**: Golang
 - **Framework**: Gin
 - **Database**: PostgreSQL (via GORM)
+- **Cache**: Redis
 - **Authentication**: JWT
 - **Architecture**: Clean Architecture
 
@@ -59,7 +60,7 @@ auth-service/
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/your-username/auth-service.git
+git clone https://github.com/Chakkarin/order-management-system/auth-service.git
 cd auth-service
 ```
 
@@ -84,13 +85,42 @@ docker-compose up --build
 
 ---
 
+## Example API Requests
+
+#### Register a New User
+```bash
+curl -X POST http://localhost:8080/auth/register \
+-H "Content-Type: application/json" \
+-d '{"username": "john_doe", "email": "john@example.com", "password": "password123"}'
+```
+
+#### Login
+```bash
+curl -X POST http://localhost:8080/auth/login \
+-H "Content-Type: application/json" \
+-d '{"email": "john@example.com", "password": "password123"}'
+```
+
+---
+
 ## Environment Variables
 
 Make sure to set the following environment variables in a .env file or in Docker Compose:
 
 ```bash
 DATABASE_URL=postgresql://auth_user:auth_password@auth-db:5432/auth_db
+REDIS_URL=redis://redis:6379
 JWT_SECRET=your_jwt_secret
+```
+
+---
+
+## Testing
+Use Postman or Curl to test the APIs. You can also write Unit Tests for the Use Cases and Controllers using Go's testing package.
+
+### Run Unit Tests
+```bash
+go test ./...
 ```
 
 ---
@@ -100,3 +130,4 @@ JWT_SECRET=your_jwt_secret
 - Implement multi-factor authentication (MFA).
 - Add role-based access control (RBAC).
 - Enhance logging and monitoring.
+- Add support for token refresh and account deactivation.
