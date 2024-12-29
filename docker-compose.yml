@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+    auth-service:
+        build:
+            context: ./services/auth-service
+        container_name: auth-service
+        ports:
+            - "8080:8080" # Port mapping
+        environment:
+            - DATABASE_URL=postgresql://auth_user:auth_password@auth-db:5432/auth_db
+        depends_on:
+            - auth-db
+        networks:
+            - backend
+
+    auth-db:
+        image: postgres:15
+        container_name: postgres-auth
+        environment:
+            POSTGRES_USER: auth_user
+            POSTGRES_PASSWORD: auth_password
+            POSTGRES_DB: auth_db
+        volumes:
+            - auth_db_data:/var/lib/postgresql/data
+        networks:
+            backend:
+                aliases:
+                    - auth-db
+
+networks:
+    backend:
+        driver: bridge
+
+volumes:
+    auth_db_data:
