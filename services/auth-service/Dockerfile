@@ -1,10 +1,14 @@
-FROM golang:1.20-alpine
+FROM golang:1.23.4
 
 WORKDIR /app
 
+COPY go.mod go.sum ./
+RUN go mod download
+
 COPY . .
 
-RUN go mod tidy
-RUN go build -o auth-service .
+RUN go build -o auth-service ./cmd/main.go
+
+EXPOSE 8080
 
 CMD ["./auth-service"]
