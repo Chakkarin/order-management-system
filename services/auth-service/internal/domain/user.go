@@ -3,6 +3,8 @@ package domain
 import (
 	"context"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type UserRepository interface {
@@ -12,7 +14,7 @@ type UserRepository interface {
 }
 
 type User struct {
-	ID        uint      `gorm:"primaryKey"`
+	ID        uuid.UUID `gorm:"primaryKey"`
 	Username  string    `gorm:"unique;not null"`
 	Email     string    `gorm:"unique;not null"`
 	Password  string    `gorm:"not null"`
