@@ -28,7 +28,7 @@ func (h *UserHandler) Register(ctx context.Context, req *auth.RegisterRequest) (
 		return nil, fmt.Errorf("all fields are required")
 	}
 
-	if !utils.IsValidEmail(req.Email) {
+	if !utils.IsValidEmail(&req.Email) {
 		return nil, fmt.Errorf("invalid email format")
 	}
 
