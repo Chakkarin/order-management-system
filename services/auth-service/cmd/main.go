@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"order-management-system/services/auth-service/internal/controllers"
+	"order-management-system/services/auth-service/internal/domain"
 	"order-management-system/services/auth-service/internal/infrastructure"
 	"order-management-system/services/auth-service/internal/repositories"
 	"order-management-system/services/auth-service/internal/usecases"
@@ -34,8 +35,12 @@ func main() {
 	// Connect to database
 	db := infrastructure.ConnectDB()
 
+	// set database auto uuid
+	if ex := db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`); ex.Error != nil {
+		log.Fatalf("❌ Failed to create extension uuid-ossp: %v", ex.Error)
+	}
 	// Migrate schema
-	// db.AutoMigrate(&domain.User{})
+	db.AutoMigrate(&domain.User{})
 
 	// Initialize Dependencies
 	userRepo := repositories.NewUserRepository(db)
