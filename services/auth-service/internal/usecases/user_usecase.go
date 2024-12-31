@@ -7,6 +7,7 @@ import (
 	"order-management-system/services/auth-service/internal/utils"
 
 	"github.com/redis/go-redis/v9"
+	"github.com/streadway/amqp"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -17,16 +18,17 @@ type UserUsecaseInterface interface {
 type UserUsecase struct {
 	UserRepo domain.UserRepository
 	Redis    *redis.Client
+	Mq       *amqp.Channel
 }
 
-func NewUserUsecase(repo domain.UserRepository, redis *redis.Client) UserUsecaseInterface {
-	return &UserUsecase{UserRepo: repo, Redis: redis}
+func NewUserUsecase(repo domain.UserRepository, redis *redis.Client, mq *amqp.Channel) UserUsecaseInterface {
+	return &UserUsecase{UserRepo: repo, Redis: redis, Mq: mq}
 }
 
 func (u *UserUsecase) Register(ctx context.Context, user *domain.User) error {
 
-	// ตรวจสอบ Username และ Email ว่าซ้ำหรือไม่
-	if err := u.UserRepo.CheckDuplicate(ctx, user.Username, user.Email); err != nil {
+	// 1. ตรวจสอบ Username และ Email ว่าซ้ำหรือไม่
+	if err := u.UserRepo.CheckDuplicate(ctx, &user.Username, &user.Email); err != nil {
 		return errors.New("username or email already exists")
 	}
 

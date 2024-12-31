@@ -13,6 +13,9 @@ import (
 func ConnectDB() *gorm.DB {
 
 	dsn := os.Getenv("DATABASE_URL")
+	if dsn == "" {
+		log.Panic("❌ DATABASE_URL is not set")
+	}
 
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
@@ -28,10 +31,10 @@ func ConnectDB() *gorm.DB {
 		Logger: newLogger,
 	})
 	if err != nil {
-		log.Panicf("Failed to connect to database: %v", err)
+		log.Panicf("❌ Failed to connect to database: %v", err)
 	}
 
-	log.Println("connected to database...")
+	log.Println("✅ connected to database...")
 
 	return db
 }
