@@ -10,7 +10,7 @@ import (
 type UserRepository interface {
 	CreateUser(ctx context.Context, user *User) error
 
-	CheckDuplicate(ctx context.Context, username, email string) error
+	CheckDuplicate(ctx context.Context, username, email *string) error
 }
 
 type User struct {
