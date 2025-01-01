@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"context"
-	"errors"
 	"order-management-system/services/auth-service/internal/domain"
 
 	"gorm.io/gorm"
@@ -20,23 +19,41 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *domain.User) erro
 	return r.DB.WithContext(ctx).Create(user).Error
 }
 
-func (r *UserRepository) CheckDuplicate(ctx context.Context, username, email *string) error {
+func (r *UserRepository) SaveUser(ctx context.Context, user *domain.User) error {
+	return r.DB.WithContext(ctx).Save(user).Error
+}
+
+func (r *UserRepository) IsDuplicateUsername(ctx context.Context, username *string) (*bool, error) {
 
 	var count int64
 
-	if err := r.DB.WithContext(ctx).Model(&domain.User{}).Where("username = ?", *username).Count(&count).Error; err != nil {
-		return err
-	}
-	if count > 0 {
-		return errors.New("username already exists")
+	if err := r.DB.WithContext(ctx).Model(&domain.User{}).Where("username = ? ", *username).Limit(1).Count(&count).Error; err != nil {
+		return nil, err
 	}
 
-	if err := r.DB.WithContext(ctx).Model(&domain.User{}).Where("email = ?", *email).Count(&count).Error; err != nil {
-		return err
-	}
-	if count > 0 {
-		return errors.New("email already exists")
+	isDuplicate := count > 0
+	return &isDuplicate, nil
+}
+
+func (r *UserRepository) IsDuplicateEmail(ctx context.Context, email *string) (*bool, error) {
+
+	var count int64
+
+	if err := r.DB.WithContext(ctx).Model(&domain.User{}).Where("email = ? ", *email).Limit(1).Count(&count).Error; err != nil {
+		return nil, err
 	}
 
-	return nil
+	isDuplicate := count > 0
+	return &isDuplicate, nil
+}
+
+func (r *UserRepository) IsEmailVerified(ctx context.Context, email *string) (*bool, error) {
+	var count int64
+
+	if err := r.DB.WithContext(ctx).Model(&domain.User{}).Where("email = ? and verified is true", *email).Limit(1).Count(&count).Error; err != nil {
+		return nil, err
+	}
+
+	isEmailVerified := count > 0
+	return &isEmailVerified, nil
 }

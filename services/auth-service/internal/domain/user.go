@@ -9,8 +9,11 @@ import (
 
 type UserRepository interface {
 	CreateUser(ctx context.Context, user *User) error
+	SaveUser(ctx context.Context, user *User) error
 
-	CheckDuplicate(ctx context.Context, username, email *string) error
+	IsDuplicateUsername(ctx context.Context, username *string) (*bool, error)
+	IsDuplicateEmail(ctx context.Context, email *string) (*bool, error)
+	IsEmailVerified(ctx context.Context, email *string) (*bool, error)
 }
 
 type User struct {
