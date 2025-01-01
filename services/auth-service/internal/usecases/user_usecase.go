@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"order-management-system/services/auth-service/internal/domain"
-	"order-management-system/services/auth-service/internal/utils"
 
 	"github.com/redis/go-redis/v9"
 	"github.com/streadway/amqp"
@@ -27,35 +26,67 @@ func NewUserUsecase(repo domain.UserRepository, redis *redis.Client, mq *amqp.Ch
 
 func (u *UserUsecase) Register(ctx context.Context, user *domain.User) error {
 
-	// 1. ตรวจสอบ Username และ Email ว่าซ้ำหรือไม่
-	if err := u.UserRepo.CheckDuplicate(ctx, &user.Username, &user.Email); err != nil {
-		return errors.New("username or email already exists")
-	}
-
-	// Hash Password
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	// check email exists
+	isDupEmail, err := u.UserRepo.IsDuplicateEmail(ctx, &user.Email)
 	if err != nil {
-		return errors.New("failed to hash password")
-	}
-	user.Password = string(hashedPassword)
-
-	// บันทึก User ลงฐานข้อมูล
-	if err := u.UserRepo.CreateUser(ctx, user); err != nil {
-		return errors.New("failed to create user")
+		return err
 	}
 
-	// สร้าง Verification Code และเก็บใน Redis
-	verificationCode, err := utils.GenerateVerificationCode()
+	saveUser := func() error {
+
+		// Hash Password
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+		if err != nil {
+			return errors.New("failed to hash password")
+		}
+		user.Password = string(hashedPassword)
+
+		// save user
+		if err := u.UserRepo.SaveUser(ctx, user); err != nil {
+			return errors.New("failed to update user")
+		}
+
+		// ส่ง email ใหม่
+		err = SendVerificationEmail(&user.Email, &VERIFIER_TYPE)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	if *isDupEmail {
+		// check email verified
+		isEmailVerified, err := u.UserRepo.IsEmailVerified(ctx, &user.Email)
+		if err != nil {
+			return err
+		}
+
+		if !*isEmailVerified {
+
+			if err := saveUser(); err != nil {
+				return err
+			}
+
+			return nil
+		}
+
+		return errors.New("email already exists")
+	}
+
+	// check username exists
+	isDupUsername, err := u.UserRepo.IsDuplicateUsername(ctx, &user.Username)
 	if err != nil {
-		return errors.New("failed to generate verification code")
+		return err
 	}
 
-	err = u.Redis.Set(ctx, "verification:"+user.Email, verificationCode, 0).Err()
-	if err != nil {
-		return errors.New("failed to store verification code")
+	if *isDupUsername {
+		return errors.New("username already exists")
 	}
 
-	// ส่ง kafka
+	if err := saveUser(); err != nil {
+		return err
+	}
 
 	return nil
 }
