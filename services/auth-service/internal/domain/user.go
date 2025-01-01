@@ -11,14 +11,12 @@ type UserRepository interface {
 	CreateUser(ctx context.Context, user *User) error
 	SaveUser(ctx context.Context, user *User) error
 
-	IsDuplicateUsername(ctx context.Context, username *string) (*bool, error)
-	IsDuplicateEmail(ctx context.Context, email *string) (*bool, error)
-	IsEmailVerified(ctx context.Context, email *string) (*bool, error)
+	HasEmail(ctx context.Context, email *string) (*bool, error)
+	HasEmailVerified(ctx context.Context, email *string) (*bool, error)
 }
 
 type User struct {
 	ID        uuid.UUID `gorm:"primaryKey,type:uuid;default:uuid_generate_v4()"`
-	Username  string    `gorm:"unique;not null"`
 	Email     string    `gorm:"unique;not null"`
 	Password  string    `gorm:"not null"`
 	Verified  bool      `gorm:"default:false"`

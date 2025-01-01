@@ -2,11 +2,14 @@ package controllers
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"order-management-system/services/auth-service/internal/domain"
 	"order-management-system/services/auth-service/internal/usecases"
 	"order-management-system/services/auth-service/internal/utils"
 	"order-management-system/services/auth-service/proto/auth"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type UserHandlerInterface interface {
@@ -23,25 +26,27 @@ func NewUserHandler(usecase usecases.UserUsecaseInterface) *UserHandler {
 }
 
 func (h *UserHandler) Register(ctx context.Context, req *auth.RegisterRequest) (*auth.RegisterResponse, error) {
+
+	log.Println(req.Email, req.Password)
+
 	// Validate request
-	if req.Username == "" || req.Email == "" || req.Password == "" {
-		return nil, fmt.Errorf("all fields are required")
+	if req.Email == "" || req.Password == "" {
+		return nil, status.New(codes.InvalidArgument, "username or password not empty").Err()
 	}
 
 	if !utils.IsValidEmail(&req.Email) {
-		return nil, fmt.Errorf("invalid email format")
+		return nil, status.New(codes.InvalidArgument, "invalid email format").Err()
 	}
 
 	// Map Request เป็น Domain Model
 	user := &domain.User{
-		Username: req.Username,
 		Email:    req.Email,
 		Password: req.Password,
 	}
 
 	// Call Usecase
 	if err := h.Usecase.Register(ctx, user); err != nil {
-		return nil, fmt.Errorf("failed to register user: %v", err)
+		return nil, status.New(codes.InvalidArgument, err.Error()).Err()
 	}
 
 	return &auth.RegisterResponse{

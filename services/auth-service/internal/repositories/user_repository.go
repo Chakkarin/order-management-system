@@ -19,23 +19,37 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *domain.User) erro
 	return r.DB.WithContext(ctx).Create(user).Error
 }
 
-func (r *UserRepository) SaveUser(ctx context.Context, user *domain.User) error {
-	return r.DB.WithContext(ctx).Save(user).Error
-}
-
-func (r *UserRepository) IsDuplicateUsername(ctx context.Context, username *string) (*bool, error) {
-
-	var count int64
-
-	if err := r.DB.WithContext(ctx).Model(&domain.User{}).Where("username = ? ", *username).Limit(1).Count(&count).Error; err != nil {
-		return nil, err
+func (r *UserRepository) FindOneByEmail(ctx context.Context, email *string) (*domain.User, error) {
+	var user domain.User
+	result := r.DB.WithContext(ctx).Where("email = ?", *email).First(&user)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			// ไม่พบข้อมูล
+			return nil, nil
+		}
+		return nil, result.Error
 	}
 
-	isDuplicate := count > 0
-	return &isDuplicate, nil
+	return &user, nil
 }
 
-func (r *UserRepository) IsDuplicateEmail(ctx context.Context, email *string) (*bool, error) {
+func (r *UserRepository) SaveUser(ctx context.Context, user *domain.User) error {
+
+	existingUser, err := r.FindOneByEmail(ctx, &user.Email)
+	if err != nil {
+		return err
+	}
+
+	if existingUser == nil {
+		return r.DB.WithContext(ctx).Create(user).Error
+	}
+
+	existingUser.Password = user.Password
+
+	return r.DB.WithContext(ctx).Save(&existingUser).Error
+}
+
+func (r *UserRepository) HasEmail(ctx context.Context, email *string) (*bool, error) {
 
 	var count int64
 
@@ -47,7 +61,7 @@ func (r *UserRepository) IsDuplicateEmail(ctx context.Context, email *string) (*
 	return &isDuplicate, nil
 }
 
-func (r *UserRepository) IsEmailVerified(ctx context.Context, email *string) (*bool, error) {
+func (r *UserRepository) HasEmailVerified(ctx context.Context, email *string) (*bool, error) {
 	var count int64
 
 	if err := r.DB.WithContext(ctx).Model(&domain.User{}).Where("email = ? and verified is true", *email).Limit(1).Count(&count).Error; err != nil {

@@ -1,6 +1,6 @@
 package usecases
 
 var (
-	VERIFIER_TYPE    = "VERIFIER"
-	FORGOT_PASS_TYPE = "FORGOT_PASS"
+	VERIFIER_TYPE    = "verify-user"
+	FORGOT_PASS_TYPE = "forgot-pass"
 )

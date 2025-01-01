@@ -3,6 +3,7 @@ package usecases
 import (
 	"context"
 	"errors"
+	"fmt"
 	"order-management-system/services/auth-service/internal/domain"
 
 	"github.com/redis/go-redis/v9"
@@ -27,7 +28,7 @@ func NewUserUsecase(repo domain.UserRepository, redis *redis.Client, mq *amqp.Ch
 func (u *UserUsecase) Register(ctx context.Context, user *domain.User) error {
 
 	// check email exists
-	isDupEmail, err := u.UserRepo.IsDuplicateEmail(ctx, &user.Email)
+	isDupEmail, err := u.UserRepo.HasEmail(ctx, &user.Email)
 	if err != nil {
 		return err
 	}
@@ -37,17 +38,17 @@ func (u *UserUsecase) Register(ctx context.Context, user *domain.User) error {
 		// Hash Password
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 		if err != nil {
-			return errors.New("failed to hash password")
+			return fmt.Errorf("failed to hash password : %v", err.Error())
 		}
 		user.Password = string(hashedPassword)
 
 		// save user
 		if err := u.UserRepo.SaveUser(ctx, user); err != nil {
-			return errors.New("failed to update user")
+			return err
 		}
 
 		// ส่ง email ใหม่
-		err = SendVerificationEmail(&user.Email, &VERIFIER_TYPE)
+		err = u.sendEmail(&user.Email, &VERIFIER_TYPE)
 		if err != nil {
 			return err
 		}
@@ -57,7 +58,7 @@ func (u *UserUsecase) Register(ctx context.Context, user *domain.User) error {
 
 	if *isDupEmail {
 		// check email verified
-		isEmailVerified, err := u.UserRepo.IsEmailVerified(ctx, &user.Email)
+		isEmailVerified, err := u.UserRepo.HasEmailVerified(ctx, &user.Email)
 		if err != nil {
 			return err
 		}
@@ -72,16 +73,6 @@ func (u *UserUsecase) Register(ctx context.Context, user *domain.User) error {
 		}
 
 		return errors.New("email already exists")
-	}
-
-	// check username exists
-	isDupUsername, err := u.UserRepo.IsDuplicateUsername(ctx, &user.Username)
-	if err != nil {
-		return err
-	}
-
-	if *isDupUsername {
-		return errors.New("username already exists")
 	}
 
 	if err := saveUser(); err != nil {
