@@ -49,6 +49,10 @@ func (r *UserRepository) SaveUser(ctx context.Context, user *domain.User) error 
 	return r.DB.WithContext(ctx).Save(&existingUser).Error
 }
 
+func (r *UserRepository) EmailVerified(ctx context.Context, email *string) error {
+	return r.DB.WithContext(ctx).Model(&domain.User{}).Where("email = ?", *email).Update("verified", true).Error
+}
+
 func (r *UserRepository) HasEmail(ctx context.Context, email *string) (*bool, error) {
 
 	var count int64

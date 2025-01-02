@@ -6,24 +6,8 @@ import (
 	"fmt"
 	"order-management-system/services/auth-service/internal/domain"
 
-	"github.com/redis/go-redis/v9"
-	"github.com/streadway/amqp"
 	"golang.org/x/crypto/bcrypt"
 )
-
-type UserUsecaseInterface interface {
-	Register(ctx context.Context, user *domain.User) error
-}
-
-type UserUsecase struct {
-	UserRepo domain.UserRepository
-	Redis    *redis.Client
-	Mq       *amqp.Channel
-}
-
-func NewUserUsecase(repo domain.UserRepository, redis *redis.Client, mq *amqp.Channel) UserUsecaseInterface {
-	return &UserUsecase{UserRepo: repo, Redis: redis, Mq: mq}
-}
 
 func (u *UserUsecase) Register(ctx context.Context, user *domain.User) error {
 
@@ -48,7 +32,7 @@ func (u *UserUsecase) Register(ctx context.Context, user *domain.User) error {
 		}
 
 		// ส่ง email ใหม่
-		err = u.sendEmail(&user.Email, &VERIFIER_TYPE)
+		err = u.sendEmailUsecase(&user.Email, &VERIFIER_TYPE)
 		if err != nil {
 			return err
 		}
@@ -80,4 +64,17 @@ func (u *UserUsecase) Register(ctx context.Context, user *domain.User) error {
 	}
 
 	return nil
+}
+
+func (u *UserUsecase) Verify(ctx context.Context, text *string) error {
+
+	/*
+		รับ text base64 มา decode email|<string ที่ถูก hash ไว้ใน redis>
+		<string ที่ถูก hash ไว้ใน redis> เมื่อถอดออกมาจะได้ email ของ user ที่ต้องการ verify
+	*/
+
+	email := text
+
+	// update verified email = true
+	return u.UserRepo.EmailVerified(ctx, email)
 }
