@@ -1,7 +1,8 @@
 version: "3.9"
 services:
   auth-db:
-    image: postgres:17.2-alpine
+    image: postgres:latest
+    container_name: auth-db-oms
     environment:
       POSTGRES_USER: auth_user
       POSTGRES_PASSWORD: auth_password
@@ -12,9 +13,17 @@ services:
       - backend
 
   redis:
-    image: redis:7.0-alpine
+    image: redis:latest
+    container_name: redis-oms
     ports:
       - "6379:6379"
+    networks:
+      - backend
+  redisinsight:
+    image: redislabs/redisinsight:latest
+    container_name: redis-ui-oms
+    ports:
+      - "8001:8001" # Web UI Port
     networks:
       - backend
 
