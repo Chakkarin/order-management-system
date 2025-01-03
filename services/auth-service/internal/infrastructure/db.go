@@ -2,6 +2,8 @@ package infrastructure
 
 import (
 	"log"
+	"order-management-system/services/auth-service/internal/config"
+	"order-management-system/services/auth-service/internal/domain"
 	"os"
 	"time"
 
@@ -10,7 +12,7 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-func ConnectDB() *gorm.DB {
+func ConnectDB(conf *config.Database) *gorm.DB {
 
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
@@ -35,6 +37,23 @@ func ConnectDB() *gorm.DB {
 	}
 
 	log.Println("✅ connected to database...")
+
+	tx := db.Begin()
+
+	// set database auto uuid
+	if err := db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`); err.Error != nil {
+		log.Panicf("❌ Failed to create extension uuid-ossp: %v", err.Error)
+	}
+
+	// Migrate schema
+	if err := db.AutoMigrate(&domain.User{}); err != nil {
+		log.Panicf("❌ Failed to migrate schema: %v", err)
+	}
+
+	if ex := tx.Commit().Error; ex != nil {
+		tx.Rollback()
+		panic(ex)
+	}
 
 	return db
 }

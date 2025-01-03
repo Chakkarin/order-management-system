@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"order-management-system/services/auth-service/internal/config"
 	"order-management-system/services/auth-service/internal/domain"
 
 	"github.com/redis/go-redis/v9"
@@ -21,8 +22,8 @@ type UserUsecase struct {
 	Mq       *amqp.Channel
 }
 
-func NewUserUsecase(repo domain.UserRepository, redis *redis.Client, mq *amqp.Channel) UserUsecaseInterface {
-	return &UserUsecase{UserRepo: repo, Redis: redis, Mq: mq}
+func NewUserUsecase(repo domain.UserRepository, deps *config.AppDependencies) UserUsecaseInterface {
+	return &UserUsecase{UserRepo: repo, Redis: deps.Redis, Mq: deps.RabbitMq}
 }
 
 func (u *UserUsecase) Register(ctx context.Context, user *domain.User) error {
@@ -48,7 +49,7 @@ func (u *UserUsecase) Register(ctx context.Context, user *domain.User) error {
 		}
 
 		// ส่ง email ใหม่
-		err = u.sendEmail(&user.Email, &VERIFIER_TYPE)
+		err = u.sendEmail(&user.Email, &config.MQ_VERIFIER_TYPE)
 		if err != nil {
 			return err
 		}

@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"order-management-system/services/auth-service/internal/config"
 	"os"
 
 	"github.com/redis/go-redis/v9"
 )
 
-func ConnectRedis() *redis.Client {
+func ConnectRedis(conf *config.Redis) *redis.Client {
 	dsn := os.Getenv("REDIS_URL")
 	if dsn == "" {
 		panic("❌ REDIS_URL is not set")

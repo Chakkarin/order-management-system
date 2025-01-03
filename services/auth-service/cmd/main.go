@@ -3,56 +3,35 @@ package main
 import (
 	"log"
 	"net"
-	"os"
 
+	"order-management-system/services/auth-service/internal/config"
 	"order-management-system/services/auth-service/internal/controllers"
-	"order-management-system/services/auth-service/internal/domain"
-	"order-management-system/services/auth-service/internal/infrastructure"
 	"order-management-system/services/auth-service/internal/repositories"
 	"order-management-system/services/auth-service/internal/usecases"
 	"order-management-system/services/auth-service/proto/auth"
 
-	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 )
 
-func init() {
-
-	if err := godotenv.Load(); err != nil {
-		log.Panic("❌ No .env file found, loading from system env")
-	}
-
-	log.Println("✅ loaded .env ...")
-}
-
 func main() {
 
-	mq := infrastructure.ConnectMQ()
-
-	// Connect to redis
-	redis := infrastructure.ConnectRedis()
-
-	// Connect to database
-	db := infrastructure.ConnectDB()
-
-	// set database auto uuid
-	if ex := db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`); ex.Error != nil {
-		log.Fatalf("❌ Failed to create extension uuid-ossp: %v", ex.Error)
-	}
-	// Migrate schema
-	db.AutoMigrate(&domain.User{})
+	// Load Configuration
+	cfg := config.LoadConfig()
 
 	// Initialize Dependencies
-	userRepo := repositories.NewUserRepository(db)
-	authUsecase := usecases.NewUserUsecase(userRepo, redis, mq)
-	authController := controllers.NewUserHandler(authUsecase)
+	deps := initDependencies(cfg)
+
+	//
+	repo := repositories.NewUserRepository(deps.PgDB)
+	authUsecase := usecases.NewUserUsecase(repo, deps)
+	handler := controllers.NewUserHandler(authUsecase)
 
 	// Create gRPC Server
 	grpcServer := grpc.NewServer()
-	auth.RegisterAuthServiceServer(grpcServer, authController)
+	auth.RegisterAuthServiceServer(grpcServer, handler)
 
 	// Start gRPC server
-	portgRPC := os.Getenv("PORT_GRPC")
+	portgRPC := cfg.GrpcPort
 	listener, err := net.Listen("tcp", portgRPC)
 	if err != nil {
 		log.Fatalf("❌ Failed to listen on port %s: %v", portgRPC, err)
