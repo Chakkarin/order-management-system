@@ -10,6 +10,7 @@ import (
 type UserRepository interface {
 	CreateUser(ctx context.Context, user *User) error
 	SaveUser(ctx context.Context, user *User) error
+	EmailVerified(ctx context.Context, email *string) error
 
 	HasEmail(ctx context.Context, email *string) (*bool, error)
 	HasEmailVerified(ctx context.Context, email *string) (*bool, error)

@@ -49,8 +49,7 @@ func (u *UserUsecase) Register(ctx context.Context, user *domain.User) error {
 		}
 
 		// ส่ง email ใหม่
-		err = u.sendEmail(&user.Email, &config.MQ_VERIFIER_TYPE)
-		if err != nil {
+		if err = u.sendEmail(&user.Email, &config.MQ_VERIFIER_TYPE); err != nil {
 			return err
 		}
 
@@ -81,4 +80,17 @@ func (u *UserUsecase) Register(ctx context.Context, user *domain.User) error {
 	}
 
 	return nil
+}
+
+func (u *UserUsecase) Verify(ctx context.Context, text *string) error {
+
+	/*
+		รับ text base64 มา decode email|<string ที่ถูก hash ไว้ใน redis>
+		<string ที่ถูก hash ไว้ใน redis> เมื่อถอดออกมาจะได้ email ของ user ที่ต้องการ verify
+	*/
+
+	email := text
+
+	// update verified email = true
+	return u.UserRepo.EmailVerified(ctx, email)
 }

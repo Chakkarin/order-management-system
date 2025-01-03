@@ -8,7 +8,7 @@ import (
 	"github.com/streadway/amqp"
 )
 
-func (u *UserUsecase) sendEmail(email, type_name *string) error {
+func (u *UserUsecase) sendEmailUsecase(email, type_name *string) error {
 
 	// ส่ง mq ให้ notification service ส่ง email
 	message := fmt.Sprintf(`{"email": "%v", "type_name": "%v" }`, email, *type_name)
