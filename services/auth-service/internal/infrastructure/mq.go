@@ -2,8 +2,9 @@ package infrastructure
 
 import (
 	"log"
-	"order-management-system/services/auth-service/internal/config"
 	"os"
+	"services/auth-service/internal/config"
+	"services/auth-service/shared/constants"
 
 	"github.com/streadway/amqp"
 )
@@ -34,7 +35,7 @@ func ConnectMQ(conf *config.Mq) *amqp.Channel {
 
 func createQueueName(ch *amqp.Channel) {
 
-	nameQueues := []string{config.MQ_VERIFIER_TYPE, config.MQ_FORGOT_PASS_TYPE}
+	nameQueues := []string{constants.NAME_VERIFIER_TYPE, constants.NAME_FORGOT_PASS_TYPE}
 
 	for _, nameQueue := range nameQueues {
 		_, err := ch.QueueDeclare(

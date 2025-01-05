@@ -1,8 +1,8 @@
 package main
 
 import (
-	"order-management-system/services/auth-service/internal/config"
-	"order-management-system/services/auth-service/internal/infrastructure"
+	"services/auth-service/internal/config"
+	"services/auth-service/internal/infrastructure"
 )
 
 func initDependencies(cfg *config.Config) *config.AppDependencies {

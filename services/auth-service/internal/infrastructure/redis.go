@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"order-management-system/services/auth-service/internal/config"
 	"os"
+	"services/auth-service/internal/config"
 
 	"github.com/redis/go-redis/v9"
 )

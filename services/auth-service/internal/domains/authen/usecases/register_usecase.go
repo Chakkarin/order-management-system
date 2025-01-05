@@ -4,29 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"order-management-system/services/auth-service/internal/config"
-	"order-management-system/services/auth-service/internal/domain"
+	"services/auth-service/shared/constants"
+	"services/auth-service/shared/models"
 
-	"github.com/redis/go-redis/v9"
-	"github.com/streadway/amqp"
 	"golang.org/x/crypto/bcrypt"
 )
 
-type UserUsecaseInterface interface {
-	Register(ctx context.Context, user *domain.User) error
-}
-
-type UserUsecase struct {
-	UserRepo domain.UserRepository
-	Redis    *redis.Client
-	Mq       *amqp.Channel
-}
-
-func NewUserUsecase(repo domain.UserRepository, deps *config.AppDependencies) UserUsecaseInterface {
-	return &UserUsecase{UserRepo: repo, Redis: deps.Redis, Mq: deps.RabbitMq}
-}
-
-func (u *UserUsecase) Register(ctx context.Context, user *domain.User) error {
+func (u *UserUsecase) Register(ctx context.Context, user *models.User) error {
 
 	// check email exists
 	isDupEmail, err := u.UserRepo.HasEmail(ctx, &user.Email)
@@ -49,7 +33,7 @@ func (u *UserUsecase) Register(ctx context.Context, user *domain.User) error {
 		}
 
 		// ส่ง email ใหม่
-		if err = u.sendEmail(&user.Email, &config.MQ_VERIFIER_TYPE); err != nil {
+		if err = u.sendEmailUsecase(&user.Email, &constants.NAME_VERIFIER_TYPE); err != nil {
 			return err
 		}
 

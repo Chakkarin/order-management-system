@@ -2,9 +2,9 @@ package infrastructure
 
 import (
 	"log"
-	"order-management-system/services/auth-service/internal/config"
-	"order-management-system/services/auth-service/internal/domain"
 	"os"
+	"services/auth-service/internal/config"
+	"services/auth-service/shared/models"
 	"time"
 
 	"gorm.io/driver/postgres"
@@ -46,7 +46,7 @@ func ConnectDB(conf *config.Database) *gorm.DB {
 	}
 
 	// Migrate schema
-	if err := db.AutoMigrate(&domain.User{}); err != nil {
+	if err := db.AutoMigrate(&models.User{}); err != nil {
 		log.Panicf("❌ Failed to migrate schema: %v", err)
 	}
 

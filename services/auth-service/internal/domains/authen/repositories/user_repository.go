@@ -2,7 +2,7 @@ package repositories
 
 import (
 	"context"
-	"order-management-system/services/auth-service/internal/domain"
+	"services/auth-service/shared/models"
 
 	"gorm.io/gorm"
 )
@@ -15,12 +15,12 @@ func NewUserRepository(db *gorm.DB) *UserRepository {
 	return &UserRepository{DB: db}
 }
 
-func (r *UserRepository) CreateUser(ctx context.Context, user *domain.User) error {
+func (r *UserRepository) CreateUser(ctx context.Context, user *models.User) error {
 	return r.DB.WithContext(ctx).Create(user).Error
 }
 
-func (r *UserRepository) FindOneByEmail(ctx context.Context, email *string) (*domain.User, error) {
-	var user domain.User
+func (r *UserRepository) FindOneByEmail(ctx context.Context, email *string) (*models.User, error) {
+	var user models.User
 	result := r.DB.WithContext(ctx).Where("email = ?", *email).First(&user)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
@@ -33,7 +33,7 @@ func (r *UserRepository) FindOneByEmail(ctx context.Context, email *string) (*do
 	return &user, nil
 }
 
-func (r *UserRepository) SaveUser(ctx context.Context, user *domain.User) error {
+func (r *UserRepository) SaveUser(ctx context.Context, user *models.User) error {
 
 	existingUser, err := r.FindOneByEmail(ctx, &user.Email)
 	if err != nil {
@@ -50,14 +50,14 @@ func (r *UserRepository) SaveUser(ctx context.Context, user *domain.User) error 
 }
 
 func (r *UserRepository) EmailVerified(ctx context.Context, email *string) error {
-	return r.DB.WithContext(ctx).Model(&domain.User{}).Where("email = ?", *email).Update("verified", true).Error
+	return r.DB.WithContext(ctx).Model(&models.User{}).Where("email = ?", *email).Update("verified", true).Error
 }
 
 func (r *UserRepository) HasEmail(ctx context.Context, email *string) (*bool, error) {
 
 	var count int64
 
-	if err := r.DB.WithContext(ctx).Model(&domain.User{}).Where("email = ? ", *email).Limit(1).Count(&count).Error; err != nil {
+	if err := r.DB.WithContext(ctx).Model(&models.User{}).Where("email = ? ", *email).Limit(1).Count(&count).Error; err != nil {
 		return nil, err
 	}
 
@@ -68,7 +68,7 @@ func (r *UserRepository) HasEmail(ctx context.Context, email *string) (*bool, er
 func (r *UserRepository) HasEmailVerified(ctx context.Context, email *string) (*bool, error) {
 	var count int64
 
-	if err := r.DB.WithContext(ctx).Model(&domain.User{}).Where("email = ? and verified is true", *email).Limit(1).Count(&count).Error; err != nil {
+	if err := r.DB.WithContext(ctx).Model(&models.User{}).Where("email = ? and verified is true", *email).Limit(1).Count(&count).Error; err != nil {
 		return nil, err
 	}
 

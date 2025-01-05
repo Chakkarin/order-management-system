@@ -3,12 +3,11 @@ package main
 import (
 	"log"
 	"net"
-
-	"order-management-system/services/auth-service/internal/config"
-	"order-management-system/services/auth-service/internal/controllers"
-	"order-management-system/services/auth-service/internal/repositories"
-	"order-management-system/services/auth-service/internal/usecases"
-	"order-management-system/services/auth-service/proto/auth"
+	"services/auth-service/internal/config"
+	"services/auth-service/internal/domains/authen/controllers"
+	"services/auth-service/internal/domains/authen/repositories"
+	"services/auth-service/internal/domains/authen/usecases"
+	"services/auth-service/internal/proto/authen"
 
 	"google.golang.org/grpc"
 )
@@ -28,7 +27,7 @@ func main() {
 
 	// Create gRPC Server
 	grpcServer := grpc.NewServer()
-	auth.RegisterAuthServiceServer(grpcServer, handler)
+	authen.RegisterAuthServiceServer(grpcServer, handler)
 
 	// Start gRPC server
 	portgRPC := cfg.GrpcPort
