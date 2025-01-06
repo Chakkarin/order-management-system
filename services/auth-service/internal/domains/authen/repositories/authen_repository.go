@@ -7,19 +7,19 @@ import (
 	"gorm.io/gorm"
 )
 
-type UserRepository struct {
+type AuthenRepository struct {
 	DB *gorm.DB
 }
 
-func NewUserRepository(db *gorm.DB) *UserRepository {
-	return &UserRepository{DB: db}
+func NewAuthenRepository(db *gorm.DB) *AuthenRepository {
+	return &AuthenRepository{DB: db}
 }
 
-func (r *UserRepository) CreateUser(ctx context.Context, user *models.User) error {
+func (r *AuthenRepository) CreateUser(ctx context.Context, user *models.User) error {
 	return r.DB.WithContext(ctx).Create(user).Error
 }
 
-func (r *UserRepository) FindOneByEmail(ctx context.Context, email *string) (*models.User, error) {
+func (r *AuthenRepository) FindOneByEmail(ctx context.Context, email *string) (*models.User, error) {
 	var user models.User
 	result := r.DB.WithContext(ctx).Where("email = ?", *email).First(&user)
 	if result.Error != nil {
@@ -33,7 +33,7 @@ func (r *UserRepository) FindOneByEmail(ctx context.Context, email *string) (*mo
 	return &user, nil
 }
 
-func (r *UserRepository) SaveUser(ctx context.Context, user *models.User) error {
+func (r *AuthenRepository) SaveUser(ctx context.Context, user *models.User) error {
 
 	existingUser, err := r.FindOneByEmail(ctx, &user.Email)
 	if err != nil {
@@ -49,11 +49,11 @@ func (r *UserRepository) SaveUser(ctx context.Context, user *models.User) error 
 	return r.DB.WithContext(ctx).Save(&existingUser).Error
 }
 
-func (r *UserRepository) EmailVerified(ctx context.Context, email *string) error {
+func (r *AuthenRepository) EmailVerified(ctx context.Context, email *string) error {
 	return r.DB.WithContext(ctx).Model(&models.User{}).Where("email = ?", *email).Update("verified", true).Error
 }
 
-func (r *UserRepository) HasEmail(ctx context.Context, email *string) (*bool, error) {
+func (r *AuthenRepository) HasEmail(ctx context.Context, email *string) (*bool, error) {
 
 	var count int64
 
@@ -65,7 +65,7 @@ func (r *UserRepository) HasEmail(ctx context.Context, email *string) (*bool, er
 	return &isDuplicate, nil
 }
 
-func (r *UserRepository) HasEmailVerified(ctx context.Context, email *string) (*bool, error) {
+func (r *AuthenRepository) HasEmailVerified(ctx context.Context, email *string) (*bool, error) {
 	var count int64
 
 	if err := r.DB.WithContext(ctx).Model(&models.User{}).Where("email = ? and verified is true", *email).Limit(1).Count(&count).Error; err != nil {

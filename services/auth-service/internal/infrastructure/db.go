@@ -3,6 +3,7 @@ package infrastructure
 import (
 	"log"
 	"os"
+
 	"services/auth-service/internal/config"
 	"services/auth-service/shared/models"
 	"time"

@@ -4,13 +4,39 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"services/auth-service/shared/constants"
+	"services/auth-service/internal/infrastructure/mq"
 	"services/auth-service/shared/models"
 
+	"github.com/redis/go-redis/v9"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func (u *UserUsecase) Register(ctx context.Context, user *models.User) error {
+type (
+	UserUsecaseInterface interface {
+		Register(ctx context.Context, user *models.User) error
+		Verify(ctx context.Context, text *string) error
+
+		// sendEmailUsecase(email, type_name *string) error
+	}
+
+	AuthenUsecaseDependencies struct {
+		Repo     models.AuthenRepositoryInterface
+		Redis    *redis.Client
+		RabbitMq mq.MQInterface
+	}
+
+	AuthenUsecase struct {
+		UserRepo models.AuthenRepositoryInterface
+		Redis    *redis.Client
+		Mq       mq.MQInterface
+	}
+)
+
+func NewUserUsecase(deps *AuthenUsecaseDependencies) *AuthenUsecase {
+	return &AuthenUsecase{UserRepo: deps.Repo, Redis: deps.Redis, Mq: deps.RabbitMq}
+}
+
+func (u *AuthenUsecase) Register(ctx context.Context, user *models.User) error {
 
 	// check email exists
 	isDupEmail, err := u.UserRepo.HasEmail(ctx, &user.Email)
@@ -33,9 +59,10 @@ func (u *UserUsecase) Register(ctx context.Context, user *models.User) error {
 		}
 
 		// ส่ง email ใหม่
-		if err = u.sendEmailUsecase(&user.Email, &constants.NAME_VERIFIER_TYPE); err != nil {
-			return err
-		}
+		// message := fmt.Sprintf(`{"email": "%v"}`, user.Email)
+		// if err := mq.PublishingMq(u.Mq, &constants.NAME_VERIFIER_TYPE, &message); err != nil {
+		// 	return err
+		// }
 
 		return nil
 	}
@@ -66,7 +93,7 @@ func (u *UserUsecase) Register(ctx context.Context, user *models.User) error {
 	return nil
 }
 
-func (u *UserUsecase) Verify(ctx context.Context, text *string) error {
+func (u *AuthenUsecase) Verify(ctx context.Context, text *string) error {
 
 	/*
 		รับ text base64 มา decode email|<string ที่ถูก hash ไว้ใน redis>

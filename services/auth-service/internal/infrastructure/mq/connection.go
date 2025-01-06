@@ -1,4 +1,4 @@
-package infrastructure
+package mq
 
 import (
 	"log"
@@ -18,15 +18,15 @@ func ConnectMQ(conf *config.Mq) *amqp.Channel {
 
 	conn, err := amqp.Dial(dsn)
 	if err != nil {
-		log.Fatalf("❌ Failed to connect to RabbitMQ: %v", err)
+		log.Panicf("❌ Failed to connect to RabbitMQ: %v", err)
 	}
 
 	ch, err := conn.Channel()
 	if err != nil {
-		log.Fatalf("❌ Failed to open a channel: %v", err)
+		log.Panicf("❌ Failed to open a channel: %v", err)
 	}
 
-	createQueueName(ch)
+	go createQueueName(ch)
 
 	log.Println("✅ connected to mq...")
 
@@ -35,7 +35,10 @@ func ConnectMQ(conf *config.Mq) *amqp.Channel {
 
 func createQueueName(ch *amqp.Channel) {
 
-	nameQueues := []string{constants.NAME_VERIFIER_TYPE, constants.NAME_FORGOT_PASS_TYPE}
+	nameQueues := []string{
+		constants.NAME_VERIFIER_TYPE,
+		constants.NAME_FORGOT_PASS_TYPE,
+	}
 
 	for _, nameQueue := range nameQueues {
 		_, err := ch.QueueDeclare(
@@ -47,7 +50,7 @@ func createQueueName(ch *amqp.Channel) {
 			nil,       // arguments
 		)
 		if err != nil {
-			log.Fatalf("❌ Failed to declare a queue [%v]: %v", nameQueue, err)
+			log.Panicf("❌ Failed to declare a queue [%v]: %v", nameQueue, err)
 		}
 	}
 }

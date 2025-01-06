@@ -7,6 +7,8 @@ import (
 	"services/auth-service/internal/domains/authen/controllers"
 	"services/auth-service/internal/domains/authen/repositories"
 	"services/auth-service/internal/domains/authen/usecases"
+	"services/auth-service/internal/infrastructure"
+	"services/auth-service/internal/infrastructure/mq"
 	"services/auth-service/internal/proto/authen"
 
 	"google.golang.org/grpc"
@@ -18,11 +20,20 @@ func main() {
 	cfg := config.LoadConfig()
 
 	// Initialize Dependencies
-	deps := initDependencies(cfg)
+	// deps := initDependencies(cfg)
+
+	db := infrastructure.ConnectDB(&cfg.PgDatabase)
+	redis := infrastructure.ConnectRedis(&cfg.Redis)
+	mqConn := mq.ConnectMQ(&cfg.RabbitMq)
+	mqx := mq.NewMQReceiver(mqConn)
 
 	//
-	repo := repositories.NewUserRepository(deps.PgDB)
-	authUsecase := usecases.NewUserUsecase(repo, deps)
+	repo := repositories.NewAuthenRepository(db)
+	authUsecase := usecases.NewUserUsecase(&usecases.AuthenUsecaseDependencies{
+		Repo:     repo,
+		Redis:    redis,
+		RabbitMq: mqx,
+	})
 	handler := controllers.NewUserHandler(authUsecase)
 
 	// Create gRPC Server

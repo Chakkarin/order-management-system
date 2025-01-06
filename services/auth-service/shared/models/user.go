@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type UserRepository interface {
+type AuthenRepositoryInterface interface {
 	CreateUser(ctx context.Context, user *User) error
 	SaveUser(ctx context.Context, user *User) error
 	EmailVerified(ctx context.Context, email *string) error

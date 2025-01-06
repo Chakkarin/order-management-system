@@ -12,14 +12,16 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type UserHandlerInterface interface {
-	Register(ctx context.Context, req *authen.RegisterRequest) (*authen.RegisterResponse, error)
-}
+type (
+	UserHandlerInterface interface {
+		Register(ctx context.Context, req *authen.RegisterRequest) (*authen.RegisterResponse, error)
+	}
 
-type UserHandler struct {
-	authen.UnimplementedAuthServiceServer
-	Usecase usecases.UserUsecaseInterface
-}
+	UserHandler struct {
+		authen.UnimplementedAuthServiceServer
+		Usecase usecases.UserUsecaseInterface
+	}
+)
 
 func NewUserHandler(usecase usecases.UserUsecaseInterface) *UserHandler {
 	return &UserHandler{Usecase: usecase}
