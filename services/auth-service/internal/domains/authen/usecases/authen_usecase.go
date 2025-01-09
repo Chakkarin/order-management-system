@@ -4,31 +4,31 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"services/auth-service/internal/infrastructure/mq"
-	"services/auth-service/shared/models"
+	"services/auth-service/internal/domains/authen/models"
+	"services/auth-service/internal/domains/authen/repositories"
+	mqconn "services/auth-service/internal/infrastructure/mq_conn"
+	"services/auth-service/shared/constants"
 
 	"github.com/redis/go-redis/v9"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type (
-	UserUsecaseInterface interface {
+	AuthenUsecaseInterface interface {
 		Register(ctx context.Context, user *models.User) error
 		Verify(ctx context.Context, text *string) error
-
-		// sendEmailUsecase(email, type_name *string) error
 	}
 
 	AuthenUsecaseDependencies struct {
-		Repo     models.AuthenRepositoryInterface
+		Repo     repositories.UserRepositoryInterface
 		Redis    *redis.Client
-		RabbitMq mq.MQInterface
+		RabbitMq mqconn.MqUtilsInterface
 	}
 
 	AuthenUsecase struct {
-		UserRepo models.AuthenRepositoryInterface
+		UserRepo repositories.UserRepositoryInterface
 		Redis    *redis.Client
-		Mq       mq.MQInterface
+		Mq       mqconn.MqUtilsInterface
 	}
 )
 
@@ -59,10 +59,10 @@ func (u *AuthenUsecase) Register(ctx context.Context, user *models.User) error {
 		}
 
 		// ส่ง email ใหม่
-		// message := fmt.Sprintf(`{"email": "%v"}`, user.Email)
-		// if err := mq.PublishingMq(u.Mq, &constants.NAME_VERIFIER_TYPE, &message); err != nil {
-		// 	return err
-		// }
+		message := fmt.Sprintf(`{"email": "%v"}`, user.Email)
+		if err := u.Mq.PublishingMq(&constants.NAME_VERIFIER_TYPE, &message); err != nil {
+			return err
+		}
 
 		return nil
 	}

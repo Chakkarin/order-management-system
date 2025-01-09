@@ -1,11 +1,11 @@
-package infrastructure
+package dbconn
 
 import (
+	"fmt"
 	"log"
 	"os"
-
 	"services/auth-service/internal/config"
-	"services/auth-service/shared/models"
+	"services/auth-service/internal/domains/authen/models"
 	"time"
 
 	"gorm.io/driver/postgres"
@@ -15,10 +15,8 @@ import (
 
 func ConnectDB(conf *config.Database) *gorm.DB {
 
-	dsn := os.Getenv("DATABASE_URL")
-	if dsn == "" {
-		log.Panic("❌ DATABASE_URL is not set")
-	}
+	dsn := fmt.Sprintf("host=%v user=%v password=%v dbname=%v port=%v sslmode=disable TimeZone=Asia/Bangkok",
+		conf.Host, conf.User, conf.Password, conf.DBName, conf.Port)
 
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer

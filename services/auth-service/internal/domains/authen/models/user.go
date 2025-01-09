@@ -1,20 +1,10 @@
 package models
 
 import (
-	"context"
 	"time"
 
 	"github.com/google/uuid"
 )
-
-type AuthenRepositoryInterface interface {
-	CreateUser(ctx context.Context, user *User) error
-	SaveUser(ctx context.Context, user *User) error
-	EmailVerified(ctx context.Context, email *string) error
-
-	HasEmail(ctx context.Context, email *string) (*bool, error)
-	HasEmailVerified(ctx context.Context, email *string) (*bool, error)
-}
 
 type User struct {
 	ID        uuid.UUID `gorm:"primaryKey,type:uuid;default:uuid_generate_v4()"`

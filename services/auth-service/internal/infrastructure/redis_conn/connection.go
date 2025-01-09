@@ -1,24 +1,21 @@
-package infrastructure
+package redisconn
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"services/auth-service/internal/config"
 
 	"github.com/redis/go-redis/v9"
 )
 
 func ConnectRedis(conf *config.Redis) *redis.Client {
-	dsn := os.Getenv("REDIS_URL")
-	if dsn == "" {
-		panic("❌ REDIS_URL is not set")
-	}
 
-	opt, err := redis.ParseURL(dsn)
-	if err != nil {
-		panic(fmt.Sprintf("❌ Invalid Redis DSN: %v", err))
+	// Create Redis connection options
+	opt := &redis.Options{
+		Addr:     fmt.Sprintf("%s:%s", conf.Host, conf.Port),
+		Username: conf.User,
+		Password: conf.Password,
 	}
 
 	// สร้าง Redis Client

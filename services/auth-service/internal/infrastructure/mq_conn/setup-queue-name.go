@@ -1,37 +1,11 @@
-package mq
+package mqconn
 
 import (
 	"log"
-	"os"
-	"services/auth-service/internal/config"
 	"services/auth-service/shared/constants"
 
 	"github.com/streadway/amqp"
 )
-
-func ConnectMQ(conf *config.Mq) *amqp.Channel {
-
-	dsn := os.Getenv("MQ_URL")
-	if dsn == "" {
-		log.Panic("❌ MQ_URL is not set")
-	}
-
-	conn, err := amqp.Dial(dsn)
-	if err != nil {
-		log.Panicf("❌ Failed to connect to RabbitMQ: %v", err)
-	}
-
-	ch, err := conn.Channel()
-	if err != nil {
-		log.Panicf("❌ Failed to open a channel: %v", err)
-	}
-
-	go createQueueName(ch)
-
-	log.Println("✅ connected to mq...")
-
-	return ch
-}
 
 func createQueueName(ch *amqp.Channel) {
 

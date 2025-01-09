@@ -14,6 +14,7 @@ type (
 		RabbitMq    Mq
 		ServicePort string
 		GrpcPort    string
+		ServiceMode string
 	}
 
 	Database struct {
@@ -41,27 +42,39 @@ type (
 
 func LoadConfig() *Config {
 	if ex := godotenv.Load(".env"); ex != nil {
-		log.Fatal("Error loading .env file")
+		log.Panic("Error loading .env file")
 	}
 
 	return &Config{
 		PgDatabase: Database{
-			Host:     os.Getenv(`PG_AUTH_HOST`),
-			Port:     os.Getenv(`PG_AUTH_PORT`),
-			User:     os.Getenv(`PG_AUTH_USER`),
-			Password: os.Getenv(`PG_AUTH_PASSWORD`),
-			DBName:   os.Getenv(`PG_AUTH_DB_NAME`),
+			Host:     getEnv(`PG_AUTH_HOST`),
+			Port:     getEnv(`PG_AUTH_PORT`),
+			User:     getEnv(`PG_AUTH_USER`),
+			Password: getEnv(`PG_AUTH_PASSWORD`),
+			DBName:   getEnv(`PG_AUTH_DB_NAME`),
 		},
 		Redis: Redis{
-			Host: os.Getenv(`REDIS_HOST`),
-			Port: os.Getenv(`REDIS_PORT`),
+			Host: getEnv(`REDIS_HOST`),
+			Port: getEnv(`REDIS_PORT`),
 		},
 		RabbitMq: Mq{
-			Host:     os.Getenv(`RABBIT_MQ_HOST`),
-			Port:     os.Getenv(`RABBIT_MQ_USER`),
-			User:     os.Getenv(`RABBIT_MQ_PASSWORD`),
-			Password: os.Getenv(`RABBIT_MQ_PORT`),
+			Host:     getEnv(`RABBIT_MQ_HOST`),
+			Port:     getEnv(`RABBIT_MQ_PORT`),
+			User:     getEnv(`RABBIT_MQ_USER`),
+			Password: getEnv(`RABBIT_MQ_PASSWORD`),
 		},
-		ServicePort: os.Getenv(`AUTH_SERVICE_PORT`),
+		ServicePort: getEnv(`AUTH_SERVICE_PORT`),
+		GrpcPort:    getEnv(`GRPC_PORT`),
+		ServiceMode: getEnv(`GIN_MODE`),
 	}
+}
+
+func getEnv(key string) string {
+	if value, exists := os.LookupEnv(key); exists {
+		return value
+	}
+
+	log.Panicf(`Error loading .env %v`, key)
+
+	return ""
 }
