@@ -53,6 +53,6 @@ func (h *AuthenHTTPHandler) Register(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "User registered successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "User registered successfully. Please verify your email."})
 
 }
