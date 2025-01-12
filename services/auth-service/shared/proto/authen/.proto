@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package authen;
-option go_package = "internal/proto/authen";
+option go_package = "shared/proto/authen";
 
 service AuthService {
   rpc Register (RegisterRequest) returns (RegisterResponse);

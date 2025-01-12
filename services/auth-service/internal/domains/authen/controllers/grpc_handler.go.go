@@ -4,7 +4,7 @@ import (
 	"context"
 	"services/auth-service/internal/domains/authen/models"
 	"services/auth-service/internal/domains/authen/usecases"
-	"services/auth-service/internal/proto/authen"
+	"services/auth-service/shared/proto/authen"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

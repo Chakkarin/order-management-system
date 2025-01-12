@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"services/auth-service/internal/domains/authen/models"
 	"services/auth-service/internal/domains/authen/usecases"
-	"services/auth-service/internal/proto/authen"
+	"services/auth-service/shared/proto/authen"
 
 	"github.com/gin-gonic/gin"
 )
